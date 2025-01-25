@@ -2,21 +2,24 @@ package main
 
 import (
     "log"
-    "net/http"
-    "github.com/gorilla/mux"
-    "notifications-system/api/routes"
+    "os"
+    "github.com/joho/godotenv"
+	"notifications-system/database"
 )
 
 func main() {
-    // Create a new router
-    r := mux.NewRouter()
+	// Connect to PostgreSQL
+    database.Connect()
+    defer database.DB.Close()
 
-    // Set up routes
-    routes.SetupRoutes(r)
+    // Load .env file
+    if err := godotenv.Load(); err != nil {
+		log.Fatal("Error loading .env file")
+	} 
+	// else {
+	// 	log.Println(".env file loaded successfully")
+	// }
 
-    // Start the server
-    log.Println("Server started on :8080")
-    if err := http.ListenAndServe(":8080", r); err != nil {
-        log.Fatal("Server error:", err)
-    }
+    // Access environment variables
+    log.Printf("Server Port: %s", /* dbHost, dbPort, */ os.Getenv("PORT"))
 }
