@@ -3,9 +3,8 @@ package main
 import (
     "fmt"
     "log"
-    "notifications-system/database"
-    "notifications-system/database/models"
-
+	"notifications-system/database"      // for database connection    
+	"notifications-system/internal/email_preferences/models"
     "gorm.io/gorm"
 )
 
@@ -13,7 +12,7 @@ func runMigrations(db *gorm.DB) {
     // Run migrations for all models
     fmt.Println("Running migrations...")
     err := db.AutoMigrate(
-		&models.EmailPreference{}
+		&models.EmailPreference{},
 		// &models.User{},  // to add other models for migrations
 	)
     if err != nil {

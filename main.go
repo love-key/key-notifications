@@ -7,6 +7,7 @@ import (
 	"os/signal"
 	"syscall"
 	"time"
+	"net/http"
 
 	"github.com/gin-gonic/gin"
 	"github.com/swaggo/gin-swagger" // Import gin-swagger
@@ -14,6 +15,7 @@ import (
 
 	"notifications-system/config"
 	"notifications-system/database"
+	"notifications-system/routes/v1" // Import v1 routes
 	_ "notifications-system/docs" // Import the generated docs
 )
 
@@ -24,7 +26,7 @@ func main() {
 	}
 
 	// Connect to the database
-	database.Connect() // No need to store the return value since we're using the global DB
+	db := database.Connect() // No need to store the return value since we're using the global DB
 	defer database.Close() // Ensure we close the connection when the application terminates
 
 	// Handle graceful shutdown
@@ -33,20 +35,29 @@ func main() {
 
 	// Set Gin to Release Mode (disable debug logging)
 	gin.SetMode(gin.ReleaseMode)
-	
-	// Create Gin router
-	r := gin.New()
+
+	// Create a single Gin router
+	router := gin.New()
+
+	// Simple route for testing
+	router.GET("/", func(c *gin.Context) {
+		// log.Println("Hello, World! route hit")
+		c.JSON(http.StatusOK, gin.H{
+			"message": "Hello, World!",
+		})
+	})
 
 	// Serve Swagger UI at the /swagger endpoint (uses pre-generated Swagger docs)
-	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
-	// Your other routes go here...
-	// Example: r.GET("/api/v1/users", getUsersHandler)
+	// Setup versioned routes (v1)
+	v1.SetupV1Routes(router, db)  // Pass Gin router and DB connection to setup the routes)
 
 	// Start the server on the specified port
-	log.Printf("Server Port: %s", config.GetEnv("PORT", "3000"))
+	port := config.GetEnv("PORT", "8080")
+	log.Printf("Server Port: %s", port)
 	go func() {
-		if err := r.Run(":" + config.GetEnv("PORT", "3000")); err != nil {
+		if err := router.Run(":" + port); err != nil {
 			log.Fatalf("Server failed to start: %v", err)
 		}
 	}()

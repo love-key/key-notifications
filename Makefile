@@ -69,7 +69,7 @@ watch-swagger:
 
 # Run the application with Swagger documentation
 start:
-	go run main.go
+	nodemon --exec go run main.go --ext go
 	@echo "Application started with Swagger docs."
 
 # Run tests
