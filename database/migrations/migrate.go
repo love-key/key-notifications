@@ -12,7 +12,10 @@ import (
 func runMigrations(db *gorm.DB) {
     // Run migrations for all models
     fmt.Println("Running migrations...")
-    err := db.AutoMigrate(&models.EmailPreference{})
+    err := db.AutoMigrate(
+		&models.EmailPreference{}
+		// &models.User{},  // to add other models for migrations
+	)
     if err != nil {
         log.Fatalf("Migration failed: %v", err)
     }

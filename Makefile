@@ -57,13 +57,24 @@ rollback-all:
 seed-users:
 	go run seeders/seed_users.go
 
+# Generate Swagger documentation
+swagger:
+	swag init -g main.go --exclude database
+	@echo "Swagger documentation generated in ./docs folder."
+
+# Watch API files for changes and regenerate Swagger docs automatically
+watch-swagger:
+	nodemon --exec "swag init -g main.go --output ./docs --exclude database" --watch ./api --ext go,json,yaml
+	@echo "Watching for API changes to regenerate Swagger docs..."
+
+# Run the application with Swagger documentation
+start:
+	go run main.go
+	@echo "Application started with Swagger docs."
+
 # Run tests
 test:
 	go test ./...
-
-# Start the application with nodemon
-start:
-	nodemon --exec go run main.go --ext go
 
 # Clean up
 clean:
