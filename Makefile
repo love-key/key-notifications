@@ -1,7 +1,6 @@
-# Makefile
-
 # Variables
 DB_URL=postgres://user:password@localhost:5432/dbname?sslmode=disable
+MIGRATIONS_DIR=database/migrations  # Add this line to specify the migration directory
 
 # Initialize database folder structure
 init-db:
@@ -19,7 +18,7 @@ create-model:
 # Create a new migration
 create-migration:
 	@read -p "Enter migration name: " name; \
-	migrate create -seq -ext sql -dir $(MIGRATIONS_DIR) $${name}
+    migrate create -seq -ext sql -dir $(MIGRATIONS_DIR) $${name}
 
 # Create a new seeder
 create-seeder:
@@ -39,23 +38,43 @@ reset-seeders:
 	@echo "Seeders cleanup is complete."
 	
 # Run migrations
+# Run migrations using Go script
 migrate-up:
-	migrate -path ./migrations -database "$(DB_URL)" up
+	go run database/migrations/migrate.go
+	@echo "Migrations have been run successfully."
 
+# Rollback migration using Go script
 migrate-down:
-	migrate -path ./migrations -database "$(DB_URL)" down
+	go run database/migrations/rollback.go
+	@echo "Rollback has been completed."
+
+# Rollback all migrations
+rollback-all:
+	migrate -path $(MIGRATIONS_DIR) -database "$(DB_URL)" down -all
+	@echo "All migrations have been reverted."
 
 # Run seeders
 seed-users:
 	go run seeders/seed_users.go
 
+# Generate Swagger documentation
+swagger:
+	swag init -g main.go --exclude database
+	@echo "Swagger documentation generated in ./docs folder."
+
+# Watch API files for changes and regenerate Swagger docs automatically
+watch-swagger:
+	nodemon --exec "swag init -g main.go --output ./docs --exclude database" --watch ./api --ext go,json,yaml
+	@echo "Watching for API changes to regenerate Swagger docs..."
+
+# Run the application with Swagger documentation
+start:
+	nodemon --exec go run main.go --ext go
+	@echo "Application started with Swagger docs."
+
 # Run tests
 test:
 	go test ./...
-
-# Start the application with nodemon
-start:
-	nodemon --exec go run main.go --ext go
 
 # Clean up
 clean:
